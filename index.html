@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tron CLI</title>
+    <link rel="stylesheet" type="text/css" href="visual2.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'SF Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        
+        body {
+            background: #0d1117;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .terminal-container {
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-output {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #30363d #161b22;
+    padding-bottom: 20px;
+    max-width: 100%;
+}
+        .terminal-output::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-output::-webkit-scrollbar-track {
+            background: #161b22;
+        }
+
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+
+        .terminal-output::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        .prompt-line {
+            color: #58a6ff;
+            font-weight: 600;
+        }
+
+        .command-text {
+            color: #79c0ff;
+            font-weight: 500;
+        }
+
+       .output-text {
+    color: #c9d1d9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-all;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+.mb-2 {
+    margin-bottom: 8px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+
+        .error-text {
+            color: #f85149;
+            background: rgba(248, 81, 73, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #f85149;
+            display: inline-block;
+            margin: 4px 0;
+        }
+
+        .success-text {
+            color: #3fb950;
+            background: rgba(63, 185, 80, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #3fb950;
+            display: inline-block;
+            margin: 4px 0;
+        }
+
+        .warning-text {
+            color: #d29922;
+            background: rgba(210, 153, 34, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #d29922;
+            display: inline-block;
+            margin: 4px 0;
+        }
+
+        .input-line {
+            background: #161b22;
+            border-top: 1px solid #30363d;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #ffffff !important;
+            font-size: 14px;
+            font-weight: 400;
+            caret-color: #58a6ff;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+        
+        input:focus {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        input::placeholder {
+            color: #6e7681;
+            opacity: 1;
+        }
+
+        .header-bar {
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3fb950;
+            box-shadow: 0 0 8px rgba(63, 185, 80, 0.5);
+            animation: pulse 2s infinite;
+            transition: all 0.3s ease;
+        }
+
+        .status-dot.offline {
+            background: #f85149;
+            box-shadow: 0 0 8px rgba(248, 81, 73, 0.5);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .clear-btn {
+            background: #21262d;
+            color: #58a6ff;
+            border: 1px solid #30363d;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-btn:hover {
+            background: #30363d;
+            border-color: #58a6ff;
+        }
+
+        .suggestion-box {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            margin-bottom: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 8px 12px;
+            color: #c9d1d9;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+
+        .suggestion-item:hover {
+            background: #21262d;
+            color: #58a6ff;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #30363d;
+            border-top-color: #58a6ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .timestamp {
+            color: #6e7681;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+
+        .tron-title {
+            background: linear-gradient(135deg, #00d4ff 0%, #0080ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #161b22;
+            border: 2px solid #f85149;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 8px 32px rgba(248, 81, 73, 0.3);
+        }
+
+        .modal-header {
+            color: #f85149;
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal-body {
+            color: #c9d1d9;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal-command {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            padding: 12px;
+            border-radius: 6px;
+            color: #79c0ff;
+            font-family: monospace;
+            margin: 12px 0;
+            word-break: break-all;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .modal-btn-danger {
+            background: #f85149;
+            color: white;
+        }
+
+        .modal-btn-danger:hover {
+            background: #da3633;
+        }
+
+        .modal-btn-cancel {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #30363d;
+        }
+
+        .danger-icon {
+            font-size: 24px;
+            animation: pulse-danger 1.5s infinite;
+        }
+
+        @keyframes pulse-danger {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .error-explanation {
+            background: #1c1f26;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .error-explanation-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #58a6ff;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .error-explanation-content {
+            color: #c9d1d9;
+            line-height: 1.8;
+            font-size: 13px;
+        }
+
+        .error-section {
+            display: flex;
+            gap: 10px;
+            margin: 8px 0;
+            align-items: flex-start;
+        }
+
+        .error-icon {
+            font-size: 16px;
+            min-width: 20px;
+            margin-top: 2px;
+        }
+
+        .error-section-content {
+            flex: 1;
+        }
+
+        .error-section-title {
+            color: #79c0ff;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .explanation-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #8b949e;
+            font-size: 13px;
+            padding: 8px 0;
+        }
+        .clear-btn.active {
+    background: #3fb950;
+    color: white;
+    border-color: #3fb950;
+}
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="header-bar px-4 py-3 flex items-center justify-between">
+            <div class="flex-1"></div>
+            <div class="flex items-center gap-2 justify-center">
+                <div class="status-dot" id="statusDot"></div>
+                <span class="tron-title text-sm">TRON CLI</span>
+            </div>
+            <div class="flex-1 flex items-center gap-3 justify-end">
+                <div class="text-gray-400 text-xs" id="currentPath"></div>
+                <button class="clear-btn" id="nlpToggle" onclick="toggleNLP()">NLP: OFF</button>
+                <!--<button class="clear-btn active" id="vizToggle" onclick="toggleVisualization()">VIZ: ON</button>-->
+                <button class="clear-btn" onclick="clearTerminal()">Clear</button>
+            </div>
+        </div>
+
+        <div id="output" class="terminal-output flex-1 px-4 py-4"></div>
+
+        <div class="input-line px-4 py-3 flex items-center gap-3 relative">
+            <div class="suggestion-box" id="suggestionBox"></div>
+            <span class="prompt-line text-base">›</span>
+            <input 
+    id="userInput" 
+    type="text" 
+    class="flex-1" 
+    placeholder="Type terminal command..."
+    autocomplete="off"
+/>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="warningModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="danger-icon">⚠️</span>
+                <span>DANGEROUS COMMAND DETECTED</span>
+            </div>
+            <div class="modal-body">
+                <p>The following command may cause irreversible damage to your system:</p>
+                <div class="modal-command" id="modalCommand"></div>
+                <p><strong>Risks:</strong></p>
+                <ul id="modalRisks" style="margin-left: 20px; margin-top: 8px;"></ul>
+                <p style="margin-top: 16px;">Are you sure you want to execute this command?</p>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="cancelDangerousCommand()">Cancel</button>
+                <button class="modal-btn modal-btn-danger" onclick="confirmDangerousCommand()">Execute Anyway</button>
+            </div>
+        </div>
+    </div>
+
+ <script>
+const { exec } = require('child_process');
+const os = require('os');
+const path = require('path');
+const fs = require('fs');
+
+const outputDiv = document.getElementById('output');
+const userInput = document.getElementById('userInput');
+const currentPathDiv = document.getElementById('currentPath');
+const suggestionBox = document.getElementById('suggestionBox');
+const statusDot = document.getElementById('statusDot');
+const warningModal = document.getElementById('warningModal');
+const modalCommand = document.getElementById('modalCommand');
+const modalRisks = document.getElementById('modalRisks');
+
+const API_KEY = 'AIzaSyAJ5cAvR_-I_4E8TfHvpLQe-jDYDLtopg4';
+
+let tabs = [{
+    id: 1,
+    name: 'Terminal 1',
+    directory: process.cwd(),
+    history: [],
+    output: '',
+    active: true
+}];
+let activeTabId = 1;
+let tabCounter = 1;
+let commandHistory = [];
+let historyIndex = -1;
+let isProcessing = false;
+let pendingCommand = null;
+let pendingNaturalLanguage = null;
+let nlpEnabled = false;
+let currentTheme = 'default';
+
+const themes = {
+    default: {
+        bg: 'linear-gradient(135deg, #0d1117 0%, #161b22 100%)',
+        primary: '#58a6ff',
+        secondary: '#79c0ff',
+        text: '#c9d1d9',
+        error: '#f85149',
+        success: '#3fb950',
+        warning: '#d29922',
+        header: '#161b22',
+        border: '#30363d'
+    },
+    dracula: {
+        bg: 'linear-gradient(135deg, #282a36 0%, #1e1f29 100%)',
+        primary: '#bd93f9',
+        secondary: '#ff79c6',
+        text: '#f8f8f2',
+        error: '#ff5555',
+        success: '#50fa7b',
+        warning: '#f1fa8c',
+        header: '#1e1f29',
+        border: '#44475a'
+    },
+    nord: {
+        bg: 'linear-gradient(135deg, #2e3440 0%, #3b4252 100%)',
+        primary: '#88c0d0',
+        secondary: '#81a1c1',
+        text: '#eceff4',
+        error: '#bf616a',
+        success: '#a3be8c',
+        warning: '#ebcb8b',
+        header: '#3b4252',
+        border: '#4c566a'
+    },
+    monokai: {
+        bg: 'linear-gradient(135deg, #272822 0%, #1e1f1c 100%)',
+        primary: '#66d9ef',
+        secondary: '#a6e22e',
+        text: '#f8f8f2',
+        error: '#f92672',
+        success: '#a6e22e',
+        warning: '#e6db74',
+        header: '#1e1f1c',
+        border: '#3e3d32'
+    },
+    gruvbox: {
+        bg: 'linear-gradient(135deg, #282828 0%, #1d2021 100%)',
+        primary: '#83a598',
+        secondary: '#b8bb26',
+        text: '#ebdbb2',
+        error: '#fb4934',
+        success: '#b8bb26',
+        warning: '#fabd2f',
+        header: '#1d2021',
+        border: '#504945'
+    },
+    matrix: {
+        bg: 'linear-gradient(135deg, #000000 0%, #0d0d0d 100%)',
+        primary: '#00ff00',
+        secondary: '#00cc00',
+        text: '#00ff00',
+        error: '#ff0000',
+        success: '#00ff00',
+        warning: '#ffff00',
+        header: '#0d0d0d',
+        border: '#003300'
+    }
+};
+
+const intelligentPatterns = [
+    {
+        patterns: [/^git\s*$/i, /^g\s*$/i],
+        suggestion: 'git status',
+        message: 'Did you mean "git status"?'
+    },
+    {
+        patterns: [/^npm\s*$/i],
+        suggestion: 'npm list',
+        message: 'Did you mean "npm list" or "npm start"?'
+    },
+    {
+        patterns: [/^python\s*$/i, /^py\s*$/i],
+        suggestion: 'python --version',
+        message: 'Did you mean "python --version"?'
+    },
+    {
+        patterns: [/^node\s*$/i],
+        suggestion: 'node --version',
+        message: 'Did you mean "node --version"?'
+    },
+    {
+        patterns: [/^docker\s*$/i],
+        suggestion: 'docker ps',
+        message: 'Did you mean "docker ps"?'
+    },
+    {
+        patterns: [/^ls\s+-la\s+\|\s*$/i, /^dir\s+\|\s*$/i],
+        suggestion: 'ls -la',
+        message: 'Incomplete pipe command. Did you mean just "ls -la"?'
+    },
+    {
+        patterns: [/^cd\s*$/i],
+        suggestion: 'cd ~',
+        message: 'Did you mean "cd ~" (home directory)?'
+    },
+    {
+        patterns: [/^mkdir\s*$/i],
+        message: 'mkdir requires a directory name. Usage: mkdir <directory_name>'
+    },
+    {
+        patterns: [/^rm\s*$/i, /^del\s*$/i],
+        message: 'rm requires a file name. Usage: rm <file_name>'
+    },
+    {
+        patterns: [/^cat\s*$/i],
+        message: 'cat requires a file name. Usage: cat <file_name>'
+    }
+];
+
+const dangerousPatterns = [
+    {
+        patterns: [/rm\s+-rf?\s+[\/~]/, /rm\s+-rf?\s+\*/, /Remove-Item.*-Recurse.*-Force/i],
+        risks: ['Permanent deletion of files', 'Potential data loss', 'System files may be affected']
+    },
+    {
+        patterns: [/del\s+\/[sS]\s+\*/, /rmdir\s+\/[sS]/i],
+        risks: ['Recursive deletion', 'All subdirectories will be removed', 'Cannot be undone']
+    },
+    {
+        patterns: [/format\s+[a-zA-Z]:/, /mkfs/i],
+        risks: ['Disk formatting', 'Complete data loss on partition', 'System may become unbootable']
+    },
+    {
+        patterns: [/dd\s+if=.*of=\/dev/, /diskpart/i],
+        risks: ['Direct disk access', 'Can overwrite critical data', 'System corruption possible']
+    },
+    {
+        patterns: [/>.*\/etc\/passwd/, />.*\/etc\/shadow/, /chmod\s+777\s+\//],
+        risks: ['Security vulnerability', 'System access compromise', 'Permission changes affect security']
+    },
+    {
+        patterns: [/kill\s+-9\s+-1/, /killall\s+-9/i, /Stop-Process.*-Force/i],
+        risks: ['Terminating multiple processes', 'System may become unstable', 'Data may not be saved']
+    },
+    {
+        patterns: [/shutdown/, /reboot/, /restart-computer/i],
+        risks: ['System will restart/shutdown', 'Unsaved work will be lost', 'Running processes will terminate']
+    },
+    {
+        patterns: [/wget.*\|.*sh/, /curl.*\|.*bash/, /Invoke-Expression.*Invoke-WebRequest/i],
+        risks: ['Executing remote code', 'Malware risk', 'Unknown script execution']
+    },
+    {
+        patterns: [/:\(\)\{.*:\|:.*\};:/, /fork\s*bomb/i],
+        risks: ['Fork bomb detected', 'System will freeze', 'Requires hard reboot']
+    }
+];
+
+const suggestions = [
+    'list all files and folders',
+    'show hidden files',
+    'show my ip address',
+    'show system information',
+    'create a new folder',
+    'show current directory',
+    'show disk usage',
+    'show running processes',
+    'show network connections',
+    'search for a file',
+    'show environment variables',
+    'show cpu and memory usage'
+];
+
+function checkInternetConnection() {
+    const isOnline = navigator.onLine;
+    if (isOnline) {
+        statusDot.classList.remove('offline');
+    } else {
+        statusDot.classList.add('offline');
+    }
+}
+
+window.addEventListener('online', checkInternetConnection);
+window.addEventListener('offline', checkInternetConnection);
+
+checkInternetConnection();
+
+function applyTheme(themeName) {
+    const theme = themes[themeName] || themes.default;
+    currentTheme = themeName;
+    
+    document.documentElement.style.setProperty('--bg-gradient', theme.bg);
+    document.documentElement.style.setProperty('--color-primary', theme.primary);
+    document.documentElement.style.setProperty('--color-secondary', theme.secondary);
+    document.documentElement.style.setProperty('--color-text', theme.text);
+    document.documentElement.style.setProperty('--color-error', theme.error);
+    document.documentElement.style.setProperty('--color-success', theme.success);
+    document.documentElement.style.setProperty('--color-warning', theme.warning);
+    document.documentElement.style.setProperty('--color-header', theme.header);
+    document.documentElement.style.setProperty('--color-border', theme.border);
+    
+    document.querySelector('.terminal-container').style.background = theme.bg;
+    document.querySelector('.header-bar').style.background = theme.header;
+    document.querySelector('.header-bar').style.borderColor = theme.border;
+    document.querySelector('.input-line').style.background = theme.header;
+    document.querySelector('.input-line').style.borderColor = theme.border;
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        .prompt-line { color: ${theme.primary} !important; }
+        .command-text { color: ${theme.secondary} !important; }
+        .output-text { color: ${theme.text} !important; }
+        .error-text { color: ${theme.error} !important; background: ${theme.error}1a !important; border-color: ${theme.error} !important; }
+        .success-text { color: ${theme.success} !important; background: ${theme.success}1a !important; border-color: ${theme.success} !important; }
+        .warning-text { color: ${theme.warning} !important; background: ${theme.warning}1a !important; border-color: ${theme.warning} !important; }
+        .tab { border-color: ${theme.border} !important; }
+        .tab.active { background: ${theme.header} !important; border-bottom-color: ${theme.primary} !important; }
+        .clear-btn { background: ${theme.header} !important; color: ${theme.primary} !important; border-color: ${theme.border} !important; }
+        .suggestion-box { background: ${theme.header} !important; border-color: ${theme.border} !important; }
+        .suggestion-item { color: ${theme.text} !important; }
+        .suggestion-item:hover { color: ${theme.primary} !important; }
+    `;
+    document.head.appendChild(style);
+}
+
+function createTabBar() {
+    const existingTabBar = document.querySelector('.tab-bar');
+    if (existingTabBar) existingTabBar.remove();
+    
+    const tabBar = document.createElement('div');
+    tabBar.className = 'tab-bar';
+    tabBar.style.cssText = `
+        display: flex;
+        align-items: center;
+        background: var(--color-header, #161b22);
+        border-bottom: 1px solid var(--color-border, #30363d);
+        padding: 0 8px;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: thin;
+    `;
+    
+    tabs.forEach(tab => {
+        const tabElement = document.createElement('div');
+        tabElement.className = `tab ${tab.active ? 'active' : ''}`;
+        tabElement.style.cssText = `
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: ${tab.active ? 'var(--color-header, #161b22)' : 'transparent'};
+            border: 1px solid var(--color-border, #30363d);
+            border-bottom: 2px solid ${tab.active ? 'var(--color-primary, #58a6ff)' : 'transparent'};
+            border-radius: 6px 6px 0 0;
+            cursor: pointer;
+            font-size: 13px;
+            color: ${tab.active ? 'var(--color-primary, #58a6ff)' : 'var(--color-text, #c9d1d9)'};
+            transition: all 0.2s;
+            min-width: 120px;
+            max-width: 200px;
+        `;
+        
+        const tabName = document.createElement('span');
+        tabName.textContent = tab.name;
+        tabName.style.cssText = 'flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
+        
+        const closeBtn = document.createElement('span');
+        closeBtn.textContent = '×';
+        closeBtn.style.cssText = `
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 4px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        `;
+        closeBtn.onmouseover = () => closeBtn.style.background = 'rgba(255,255,255,0.1)';
+        closeBtn.onmouseout = () => closeBtn.style.background = 'transparent';
+        closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            closeTab(tab.id);
+        };
+        
+        tabElement.appendChild(tabName);
+        if (tabs.length > 1) {
+            tabElement.appendChild(closeBtn);
+        }
+        
+        tabElement.onclick = () => switchTab(tab.id);
+        tabBar.appendChild(tabElement);
+    });
+    
+    const newTabBtn = document.createElement('button');
+    newTabBtn.textContent = '+';
+    newTabBtn.style.cssText = `
+        background: transparent;
+        color: var(--color-primary, #58a6ff);
+        border: 1px solid var(--color-border, #30363d);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-left: 4px;
+    `;
+    newTabBtn.onmouseover = () => {
+        newTabBtn.style.background = 'var(--color-border, #30363d)';
+    };
+    newTabBtn.onmouseout = () => {
+        newTabBtn.style.background = 'transparent';
+    };
+    newTabBtn.onclick = createNewTab;
+    
+    tabBar.appendChild(newTabBtn);
+    
+    const headerBar = document.querySelector('.header-bar');
+    headerBar.parentNode.insertBefore(tabBar, headerBar.nextSibling);
+}
+
+function createNewTab() {
+    const currentTab = tabs.find(t => t.id === activeTabId);
+    if (currentTab) {
+        currentTab.output = outputDiv.innerHTML;
+        currentTab.directory = currentDirectory;
+    }
+    
+    tabCounter++;
+    const newTab = {
+        id: tabCounter,
+        name: `Terminal ${tabCounter}`,
+        directory: process.cwd(),
+        history: [],
+        output: '',
+        active: false
+    };
+    
+    tabs.forEach(t => t.active = false);
+    newTab.active = true;
+    tabs.push(newTab);
+    activeTabId = newTab.id;
+    
+    createTabBar();
+    
+    outputDiv.innerHTML = '';
+    showWelcome();
+    updatePath();
+    userInput.focus();
+}
+function closeTab(tabId) {
+    if (tabs.length === 1) return;
+    
+    const tabIndex = tabs.findIndex(t => t.id === tabId);
+    const wasActive = tabs[tabIndex].active;
+    
+    tabs.splice(tabIndex, 1);
+    
+    if (wasActive) {
+        const newActiveTab = tabs[Math.max(0, tabIndex - 1)];
+        newActiveTab.active = true;
+        activeTabId = newActiveTab.id;
+        switchTab(newActiveTab.id);
+    }
+    
+    createTabBar();
+}
+
+function switchTab(tabId) {
+
+    if (tabId === activeTabId) return;
+    
+
+    const currentTab = tabs.find(t => t.id === activeTabId);
+    if (currentTab) {
+        currentTab.output = outputDiv.innerHTML;
+        currentTab.directory = currentDirectory;
+    }
+    
+    tabs.forEach(t => t.active = (t.id === tabId));
+    activeTabId = tabId;
+    
+    const newTab = tabs.find(t => t.id === tabId);
+    if (newTab) {
+        outputDiv.innerHTML = newTab.output;
+        currentDirectory = newTab.directory;
+        process.chdir(currentDirectory);
+        updatePath();
+        
+        if (!newTab.output) {
+            showWelcome();
+        }
+    }
+    
+    createTabBar();
+    outputDiv.scrollTop = outputDiv.scrollHeight;
+    userInput.focus();
+}
+
+function createThemeSwitcher() {
+    const existingThemeSwitcher = document.querySelector('.theme-switcher');
+    if (existingThemeSwitcher) return;
+    
+    const themeSwitcher = document.createElement('div');
+    themeSwitcher.className = 'theme-switcher';
+    themeSwitcher.style.cssText = `
+        position: relative;
+        margin-right: 12px;
+    `;
+    
+    const themeBtn = document.createElement('button');
+    themeBtn.textContent = '🎨';
+    themeBtn.style.cssText = `
+        background: var(--color-header, #21262d);
+        color: var(--color-primary, #58a6ff);
+        border: 1px solid var(--color-border, #30363d);
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+    `;
+    themeBtn.onmouseover = () => {
+        themeBtn.style.background = 'var(--color-border, #30363d)';
+        themeBtn.style.borderColor = 'var(--color-primary, #58a6ff)';
+    };
+    themeBtn.onmouseout = () => {
+        themeBtn.style.background = 'var(--color-header, #21262d)';
+        themeBtn.style.borderColor = 'var(--color-border, #30363d)';
+    };
+    
+    const themeMenu = document.createElement('div');
+    themeMenu.style.cssText = `
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 8px;
+        background: var(--color-header, #161b22);
+        border: 1px solid var(--color-border, #30363d);
+        border-radius: 6px;
+        padding: 8px;
+        display: none;
+        z-index: 1000;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        min-width: 150px;
+    `;
+    
+    Object.keys(themes).forEach(themeName => {
+        const themeOption = document.createElement('div');
+        themeOption.textContent = themeName.charAt(0).toUpperCase() + themeName.slice(1);
+        themeOption.style.cssText = `
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+            color: var(--color-text, #c9d1d9);
+            font-size: 13px;
+            ${currentTheme === themeName ? 'background: var(--color-border, #30363d); color: var(--color-primary, #58a6ff);' : ''}
+        `;
+        themeOption.onmouseover = () => {
+            if (currentTheme !== themeName) {
+                themeOption.style.background = 'var(--color-border, #21262d)';
+            }
+        };
+        themeOption.onmouseout = () => {
+            if (currentTheme !== themeName) {
+                themeOption.style.background = 'transparent';
+            }
+        };
+        themeOption.onclick = () => {
+            applyTheme(themeName);
+            themeMenu.style.display = 'none';
+            createThemeSwitcher();
+        };
+        themeMenu.appendChild(themeOption);
+    });
+    
+    themeBtn.onclick = (e) => {
+        e.stopPropagation();
+        themeMenu.style.display = themeMenu.style.display === 'none' ? 'block' : 'none';
+    };
+    
+    document.addEventListener('click', () => {
+        themeMenu.style.display = 'none';
+    });
+    
+    themeSwitcher.appendChild(themeBtn);
+    themeSwitcher.appendChild(themeMenu);
+    
+    const headerRight = document.querySelector('.header-bar .flex-1:last-child');
+    headerRight.insertBefore(themeSwitcher, headerRight.firstChild);
+}
+
+function checkIntelligentError(command) {
+    for (const pattern of intelligentPatterns) {
+        for (const regex of pattern.patterns) {
+            if (regex.test(command)) {
+                return {
+                    message: pattern.message,
+                    suggestion: pattern.suggestion
+                };
+            }
+        }
+    }
+    return null;
+}
+
+let currentDirectory = process.cwd();
+
+updatePath();
+createTabBar();
+createThemeSwitcher();
+showWelcome();
+
+function updatePath() {
+    const homedir = os.homedir();
+    let displayPath = currentDirectory;
+    if (currentDirectory.startsWith(homedir)) {
+        displayPath = '~' + currentDirectory.slice(homedir.length);
+    }
+    currentPathDiv.textContent = displayPath;
+}
+
+function showWelcome() {
+    addOutput('╔═══════════════════════════════════════════════════════╗', 'success');
+    addOutput('║              Welcome to TRON CLI                      ║', 'success');
+    addOutput('╚═══════════════════════════════════════════════════════╝', 'success');
+    addOutput('', 'output');
+    addOutput('✨ New Features: Multi-tabs • Themes • Visual output', 'output');
+    addOutput('', 'output');
+    addOutput('Type commands in plain English - AI will translate them for you', 'output');
+    addOutput('', 'output');
+    addOutput('Keyboard Shortcuts:', 'output');
+    addOutput('  • Ctrl+T - New tab', 'output');
+    addOutput('  • Ctrl+W - Close tab', 'output');
+    addOutput('  • Ctrl+Tab - Next tab', 'output');
+    addOutput('  • ↑/↓ - Command history', 'output');
+    addOutput('', 'output');
+}
+
+function getTimestamp() {
+    const now = new Date();
+    return now.toLocaleTimeString('en-US', { hour12: false });
+}
+
+function addOutput(content, type = 'output', showTime = false) {
+    const line = document.createElement('div');
+    line.className = 'mb-2';
+    line.style.maxWidth = '100%';
+    line.style.overflowWrap = 'break-word';
+    line.style.wordBreak = 'break-all';
+    
+    const timeStr = showTime ? `<span class="timestamp">[${getTimestamp()}]</span>` : '';
+    
+    if (type === 'input') {
+        line.innerHTML = `${timeStr}<span class="prompt-line">›</span> <span class="text-white" style="word-break: break-all;">${escapeHtml(content)}</span>`;
+    } else if (type === 'command') {
+        line.innerHTML = `${timeStr}<span class="command-text" style="word-break: break-all;">→ ${escapeHtml(content)}</span>`;
+    } else if (type === 'error') {
+        line.innerHTML = `${timeStr}<span class="error-text" style="word-break: break-all;">✗ ${escapeHtml(content)}</span>`;
+    } else if (type === 'success') {
+        line.innerHTML = `${timeStr}<span class="success-text" style="word-break: break-all;">✓ ${escapeHtml(content)}</span>`;
+    } else if (type === 'warning') {
+        line.innerHTML = `${timeStr}<span class="warning-text" style="word-break: break-all;">⚠ ${escapeHtml(content)}</span>`;
+    } else if (type === 'html') {
+        line.innerHTML = content;
+    } else {
+        line.innerHTML = `${timeStr}<span class="output-text">${escapeHtml(content)}</span>`;
+    }
+    
+    outputDiv.appendChild(line);
+    outputDiv.scrollTop = outputDiv.scrollHeight;
+}
+
+function addErrorExplanation(errorMessage, command) {
+    const explanationDiv = document.createElement('div');
+    explanationDiv.className = 'error-explanation';
+    
+    const loadingId = 'explain-' + Date.now();
+    explanationDiv.id = loadingId;
+    
+    explanationDiv.innerHTML = `
+        <div class="error-explanation-header">
+            <span class="icon">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+       xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="7" width="16" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+    <circle cx="9" cy="13" r="1" fill="currentColor"/>
+    <circle cx="15" cy="13" r="1" fill="currentColor"/>
+    <path d="M12 3V7" stroke="currentColor" stroke-width="2"/>
+  </svg>
+</span>
+            <span>AI Error Analysis</span>
+        </div>
+        <div class="explanation-loading">
+            <span class="loading"></span>
+            <span>Analyzing error...</span>
+        </div>
+    `;
+    
+    outputDiv.appendChild(explanationDiv);
+    outputDiv.scrollTop = outputDiv.scrollHeight;
+    
+    explainError(errorMessage, command, loadingId);
+}
+
+async function explainError(errorMessage, command, elementId) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`;
+    
+    const prompt = `Analyze this terminal error and provide a clear, concise explanation in exactly this format:
+
+Error: "${errorMessage}"
+Command: "${command}"
+
+Provide response in this exact structure:
+PROBLEM: [one sentence explaining what went wrong]
+CAUSE: [one sentence explaining why it happened]
+SOLUTION: [one clear action to fix it]
+
+Keep each section to ONE sentence maximum. Be specific and actionable.`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.3,
+                    maxOutputTokens: 200
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('AI explanation failed');
+        }
+
+        const data = await response.json();
+        const explanation = data.candidates[0].content.parts[0].text.trim();
+        
+        const problemMatch = explanation.match(/PROBLEM:\s*(.+?)(?=CAUSE:|$)/s);
+        const causeMatch = explanation.match(/CAUSE:\s*(.+?)(?=SOLUTION:|$)/s);
+        const solutionMatch = explanation.match(/SOLUTION:\s*(.+?)$/s);
+        
+        const problem = problemMatch ? problemMatch[1].trim() : 'Unable to determine the issue';
+        const cause = causeMatch ? causeMatch[1].trim() : 'Cause unclear';
+        const solution = solutionMatch ? solutionMatch[1].trim() : 'Try checking command syntax';
+        
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = `
+                <div class="error-explanation-header">
+                    <span class="icon">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+       xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="7" width="16" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+    <circle cx="9" cy="13" r="1" fill="currentColor"/>
+    <circle cx="15" cy="13" r="1" fill="currentColor"/>
+    <path d="M12 3V7" stroke="currentColor" stroke-width="2"/>
+  </svg>
+</span>
+                    <span>AI Error Analysis</span>
+                </div>
+                <div class="error-explanation-content">
+                    <div class="error-section">
+                        <div class="error-icon">❌</div>
+                        <div class="error-section-content">
+                            <div class="error-section-title">Problem</div>
+                            <div>${escapeHtml(problem)}</div>
+                        </div>
+                    </div>
+                    <div class="error-section">
+                        <div class="error-icon">🔍</div>
+                        <div class="error-section-content">
+                            <div class="error-section-title">Cause</div>
+                            <div>${escapeHtml(cause)}</div>
+                        </div>
+                    </div>
+                    <div class="error-section">
+                        <div class="error-icon">💡</div>
+                        <div class="error-section-content">
+                            <div class="error-section-title">Solution</div>
+                            <div>${escapeHtml(solution)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.innerHTML = `
+                <div class="error-explanation-header">
+                    <span class="icon">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+       xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="7" width="16" height="13" rx="2" stroke="currentColor" stroke-width="2"/>
+    <circle cx="9" cy="13" r="1" fill="currentColor"/>
+    <circle cx="15" cy="13" r="1" fill="currentColor"/>
+    <path d="M12 3V7" stroke="currentColor" stroke-width="2"/>
+  </svg>
+</span>
+                    <span>AI Error Analysis</span>
+                </div>
+                <div class="error-explanation-content">
+                    <div class="error-section">
+                        <div class="error-icon">⚠️</div>
+                        <div class="error-section-content">
+                            <div>Unable to generate explanation. Check your internet connection Or Check Whether NlP is OFF.</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function addLoading() {
+    const line = document.createElement('div');
+    line.className = 'mb-2';
+    line.id = 'loading-indicator';
+    line.innerHTML = '<span class="loading"></span> <span class="text-gray-400">Processing...</span>';
+    outputDiv.appendChild(line);
+    outputDiv.scrollTop = outputDiv.scrollHeight;
+}
+
+function removeLoading() {
+    const loading = document.getElementById('loading-indicator');
+    if (loading) loading.remove();
+}
+
+function isDangerousCommand(command) {
+    for (const danger of dangerousPatterns) {
+        for (const pattern of danger.patterns) {
+            if (pattern.test(command)) {
+                return danger.risks;
+            }
+        }
+    }
+    return null;
+}
+
+function showDangerousCommandWarning(command, risks) {
+    modalCommand.textContent = command;
+    modalRisks.innerHTML = risks.map(risk => `<li style="color: #f85149; margin: 4px 0;">${risk}</li>`).join('');
+    warningModal.classList.add('active');
+}
+
+function cancelDangerousCommand() {
+    warningModal.classList.remove('active');
+    addOutput('Command execution cancelled by user', 'warning', true);
+    pendingCommand = null;
+    pendingNaturalLanguage = null;
+    isProcessing = false;
+}
+
+async function confirmDangerousCommand() {
+    warningModal.classList.remove('active');
+    if (pendingCommand) {
+        addOutput('User confirmed - executing dangerous command', 'warning', true);
+        await executeSafeCommand(pendingCommand);
+        pendingCommand = null;
+        pendingNaturalLanguage = null;
+    }
+    isProcessing = false;
+}
+
+async function convertToCommand(naturalLanguage) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${API_KEY}`;
+    
+    const isWindows = os.platform() === 'win32';
+    const shell = isWindows ? 'PowerShell' : 'bash';
+    
+    const systemPrompt = `You are an expert terminal command translator. Convert natural language to ${shell} commands.
+
+CRITICAL RULES:
+- Return ONLY the command, absolutely no explanations or markdown
+- Use ${shell} syntax exclusively
+- Current directory: ${currentDirectory}
+- Current OS: ${os.platform()}
+- For multiple operations, use ${isWindows ? ';' : '&&'}
+
+EXAMPLES:
+"list files" → ${isWindows ? 'Get-ChildItem' : 'ls -la'}
+"show hidden files" → ${isWindows ? 'Get-ChildItem -Force' : 'ls -la'}
+"create folder test" → ${isWindows ? 'New-Item -ItemType Directory -Name test' : 'mkdir test'}
+"show my ip" → ${isWindows ? 'ipconfig' : 'ifconfig'}
+"system info" → ${isWindows ? 'systeminfo' : 'uname -a'}
+"delete file test.txt" → ${isWindows ? 'Remove-Item test.txt' : 'rm test.txt'}
+"find file named config" → ${isWindows ? 'Get-ChildItem -Recurse -Filter config*' : 'find . -name "*config*"'}
+"show disk space" → ${isWindows ? 'Get-PSDrive' : 'df -h'}
+"running processes" → ${isWindows ? 'Get-Process' : 'ps aux'}
+
+Natural language: ${naturalLanguage}
+Command:`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: systemPrompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 100
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
+            throw new Error('Invalid API response structure');
+        }
+        
+        let command = data.candidates[0].content.parts[0].text.trim();
+        command = command.replace(/```[\w]*\n?/g, '').trim();
+        command = command.replace(/^Command:\s*/i, '').trim();
+        
+        return command;
+    } catch (error) {
+        throw new Error(`AI translation failed: ${error.message}`);
+    }
+}
+
+function executeCommand(command) {
+    return new Promise((resolve, reject) => {
+        const options = {
+            cwd: currentDirectory,
+            shell: true,
+            maxBuffer: 1024 * 1024 * 10,
+            timeout: 30000
+        };
+
+        exec(command, options, (error, stdout, stderr) => {
+            if (error) {
+                reject({ error: error.message, stderr, command });
+                return;
+            }
+            resolve({ stdout, stderr });
+        });
+    });
+}
+
+async function executeSafeCommand(command) {
+    try {
+        const result = await executeCommand(command);
+        if (result.stdout) {
+    addOutput(result.stdout, 'output');
+}
+        
+        if (result.stderr) {
+            addOutput(result.stderr, 'warning');
+        }
+        
+        if (!result.stdout && !result.stderr) {
+            addOutput('Command completed successfully', 'success', true);
+        }
+    } catch (error) {
+        const errorMsg = error.error || error.stderr || 'Command execution failed';
+        addOutput(errorMsg, 'error', true);
+        addErrorExplanation(errorMsg, error.command || command);
+    }
+}
+
+async function handleUserInput() {
+    const input = userInput.value.trim();
+    
+    if (!input || isProcessing) return;
+    
+
+    if (!nlpEnabled) {
+        isProcessing = true;
+        commandHistory.unshift(input);
+        historyIndex = -1;
+        
+        addOutput(input, 'input', true);
+        userInput.value = '';
+        hideSuggestions();
+        
+        if (input.toLowerCase() === 'clear') {
+            clearTerminal();
+            isProcessing = false;
+            return;
+        }
+
+        if (input.toLowerCase() === 'history') {
+            showHistory();
+            isProcessing = false;
+            return;
+        }
+
+        if (input.toLowerCase().startsWith('cd ')) {
+            await handleCdCommand(input.substring(3).trim());
+            isProcessing = false;
+            return;
+        }
+        
+
+        const risks = isDangerousCommand(input);
+        if (risks) {
+            pendingCommand = input;
+            pendingNaturalLanguage = input;
+            showDangerousCommandWarning(input, risks);
+            return;
+        }
+        
+        await executeSafeCommand(input);
+        isProcessing = false;
+        return;
+    }
+    
+
+    const naturalLanguage = input;
+    
+    const intelligentError = checkIntelligentError(naturalLanguage);
+    if (intelligentError) {
+        addOutput(naturalLanguage, 'input', true);
+        addOutput(intelligentError.message, 'warning', true);
+        if (intelligentError.suggestion) {
+            addOutput(`Suggestion: ${intelligentError.suggestion}`, 'success', true);
+        }
+        userInput.value = '';
+        return;
+    }
+    
+    isProcessing = true;
+    commandHistory.unshift(naturalLanguage);
+    historyIndex = -1;
+    
+    addOutput(naturalLanguage, 'input', true);
+    userInput.value = '';
+    hideSuggestions();
+    
+    if (!API_KEY || API_KEY.length < 20) {
+        addOutput('API key is missing or invalid. Please add your Gemini API key.', 'error', true);
+        isProcessing = false;
+        return;
+    }
+
+    if (naturalLanguage.toLowerCase() === 'clear') {
+        clearTerminal();
+        isProcessing = false;
+        return;
+    }
+
+    if (naturalLanguage.toLowerCase() === 'history') {
+        showHistory();
+        isProcessing = false;
+        return;
+    }
+
+    if (naturalLanguage.toLowerCase().startsWith('cd ')) {
+        await handleCdCommand(naturalLanguage.substring(3).trim());
+        isProcessing = false;
+        return;
+    }
+    
+    try {
+        addLoading();
+        const command = await convertToCommand(naturalLanguage);
+        removeLoading();
+        
+        addOutput(command, 'command', true);
+        
+        if (command.toLowerCase().startsWith('cd ')) {
+            await handleCdCommand(command.substring(3).trim());
+            isProcessing = false;
+            return;
+        }
+
+        const risks = isDangerousCommand(command);
+        if (risks) {
+            pendingCommand = command;
+            pendingNaturalLanguage = naturalLanguage;
+            showDangerousCommandWarning(command, risks);
+            return;
+        }
+
+        await executeSafeCommand(command);
+    } catch (error) {
+        removeLoading();
+        const errorMsg = error.message || 'Command processing failed';
+        addOutput(errorMsg, 'error', true);
+        addErrorExplanation(errorMsg, naturalLanguage);
+    }
+    
+    isProcessing = false;
+}
+
+async function handleCdCommand(targetDir) {
+    try {
+        const resolvedPath = path.resolve(currentDirectory, targetDir);
+        
+        if (!fs.existsSync(resolvedPath)) {
+            const errorMsg = `Directory not found: ${resolvedPath}`;
+            addOutput(errorMsg, 'error', true);
+            addErrorExplanation(errorMsg, `cd ${targetDir}`);
+            return;
+        }
+        
+        const stats = fs.statSync(resolvedPath);
+        if (!stats.isDirectory()) {
+            const errorMsg = `Not a directory: ${resolvedPath}`;
+            addOutput(errorMsg, 'error', true);
+            addErrorExplanation(errorMsg, `cd ${targetDir}`);
+            return;
+        }
+        
+        process.chdir(resolvedPath);
+        currentDirectory = process.cwd();
+        updatePath();
+        addOutput(`Changed directory to: ${currentDirectory}`, 'success', true);
+    } catch (error) {
+        const errorMsg = `Failed to change directory: ${error.message}`;
+        addOutput(errorMsg, 'error', true);
+        addErrorExplanation(errorMsg, `cd ${targetDir}`);
+    }
+}
+
+function clearTerminal() {
+    outputDiv.innerHTML = '';
+    showWelcome();
+}
+function toggleNLP() {
+    nlpEnabled = !nlpEnabled;
+    const nlpBtn = document.getElementById('nlpToggle');
+    nlpBtn.textContent = nlpEnabled ? 'NLP: ON' : 'NLP: OFF';
+    nlpBtn.classList.toggle('active', nlpEnabled);
+    
+    if (nlpEnabled) {
+        userInput.placeholder = 'Type your command in plain English...';
+    } else {
+        userInput.placeholder = 'Type terminal command...';
+    }
+}
+function showHistory() {
+    if (commandHistory.length === 0) {
+        addOutput('No command history available', 'warning', true);
+        return;
+    }
+    
+    addOutput('Command History:', 'success', true);
+    commandHistory.slice(0, 10).forEach((cmd, idx) => {
+        addOutput(`${idx + 1}. ${cmd}`, 'output');
+    });
+}
+
+function showSuggestions(value) {
+    const filtered = suggestions.filter(s => 
+        s.toLowerCase().includes(value.toLowerCase())
+    );
+    
+    if (filtered.length === 0 || value.length < 2) {
+        hideSuggestions();
+        return;
+    }
+    
+    suggestionBox.innerHTML = filtered.map(s => 
+        `<div class="suggestion-item" onclick="selectSuggestion('${s}')">${s}</div>`
+    ).join('');
+    
+    suggestionBox.style.display = 'block';
+}
+
+function hideSuggestions() {
+    suggestionBox.style.display = 'none';
+}
+
+function selectSuggestion(text) {
+    userInput.value = text;
+    hideSuggestions();
+    userInput.focus();
+}
+
+userInput.addEventListener('input', (e) => {
+    showSuggestions(e.target.value);
+});
+
+userInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        handleUserInput();
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (historyIndex < commandHistory.length - 1) {
+            historyIndex++;
+            userInput.value = commandHistory[historyIndex];
+        }
+    } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (historyIndex > 0) {
+            historyIndex--;
+            userInput.value = commandHistory[historyIndex];
+        } else if (historyIndex === 0) {
+            historyIndex = -1;
+            userInput.value = '';
+        }
+    } else if (e.key === 'Escape') {
+        hideSuggestions();
+    } else if (e.ctrlKey && e.key === 't') {
+        e.preventDefault();
+        createNewTab();
+    } else if (e.ctrlKey && e.key === 'w') {
+        e.preventDefault();
+        if (tabs.length > 1) {
+            closeTab(activeTabId);
+        }
+    } else if (e.ctrlKey && e.key === 'Tab') {
+        e.preventDefault();
+        const currentIndex = tabs.findIndex(t => t.id === activeTabId);
+        const nextIndex = (currentIndex + 1) % tabs.length;
+        switchTab(tabs[nextIndex].id);
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (!suggestionBox.contains(e.target) && e.target !== userInput) {
+        hideSuggestions();
+    }
+});
+
+userInput.focus();
+</script>
+<script src="handler.js"></script>
+<script src="visual.js"></script>
+
+</body>
+</html>

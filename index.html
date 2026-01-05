@@ -404,7 +404,6 @@
             <div class="flex-1 flex items-center gap-3 justify-end">
                 <div class="text-gray-400 text-xs" id="currentPath"></div>
                 <button class="clear-btn" id="nlpToggle" onclick="toggleNLP()">NLP: OFF</button>
-                <!--<button class="clear-btn active" id="vizToggle" onclick="toggleVisualization()">VIZ: ON</button>-->
                 <button class="clear-btn" onclick="clearTerminal()">Clear</button>
             </div>
         </div>
@@ -459,7 +458,7 @@ const warningModal = document.getElementById('warningModal');
 const modalCommand = document.getElementById('modalCommand');
 const modalRisks = document.getElementById('modalRisks');
 
-const API_KEY = 'AIzaSyAJ5cAvR_-I_4E8TfHvpLQe-jDYDLtopg4';
+const API_KEY = 'YOUR_GEMINI_API_KEY';
 
 let tabs = [{
     id: 1,
@@ -1624,7 +1623,5 @@ document.addEventListener('click', (e) => {
 userInput.focus();
 </script>
 <script src="handler.js"></script>
-<script src="visual.js"></script>
-
 </body>
 </html>
